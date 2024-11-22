@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Personal{% endblock %}
+
+{% block header %}
+Lista de Personal
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Botón "Nuevo Personal" -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button class="btn btn-danger" onclick="abrirNuevoPersonal()">Nuevo Personal</button>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre o carnet...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Personal -->
+    <div class="card">
+        <div class="card-header">
+            <strong>Lista de Personal</strong>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered text-center m-0" id="personalTable">
+                <thead>
+                    <tr>
+                        <th style="background-color: #8ce103; color: white;">Nombre Completo</th>
+                        <th style="background-color: #05d6f6; color: white;">Carnet de Identidad</th>
+                        <th style="background-color: #b300ff; color: white;">Edad</th>
+                        <th style="background-color: #6f42c1; color: white;">Numero de Telefono</th>
+                        <th style="background-color: #ff8c00; color: white;">Cargo</th>
+                        <th style="background-color: #ffa602; color: white;">Vehiculo</th>
+                        <th style="background-color: #007bff; color: white;">Editar</th>
+                        <th style="background-color: #dc3545; color: white;">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for personal in lista_personal %}
+                    {% if user_role == "superadmin" or personal.tipo in ["conductor", "operario"] %}
+                    <tr>
+                        <td>{{ personal.nombre }}</td>
+                        <td>{{ personal.carnet }}</td>
+                        <td>{{ personal.edad }}</td>
+                        <td>{{ personal.telefono }}</td>
+                        <td>{{ personal.tipo }}</td>
+                        <td>{{ personal.vehiculo }}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="editarPersonal('{{ personal.id }}')">Editar</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarUsuario('{{ personal.id }}')">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    function editarPersonal(userId) {
+        const popup = window.open(`/web/editar_personal/${userId}`, 'Editar Personal', 'width=600,height=700,resizable=no,scrollbars=no');
+        popup.focus();
+    }
+
+    function abrirNuevoPersonal() {
+        window.open('/web/nuevo_personal', 'Nuevo Personal', 'width=600,height=700,resizable=no,scrollbars=no');
+    }
+
+    // Filtrar por búsqueda
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#personalTable tbody tr');
+        rows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            const carnet = row.cells[1].textContent.toLowerCase();
+            row.style.display = name.includes(searchText) || carnet.includes(searchText) ? '' : 'none';
+        });
+    });
+
+    function eliminarUsuario(userId) {
+        if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+            fetch(`/web/eliminar_personal/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Usuario eliminado correctamente');
+                    location.reload(); // Recargar la página para actualizar la lista
+                } else {
+                    alert('Error al eliminar el usuario');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión al eliminar el usuario');
+            });
+        }
+    }
+</script>
+{% endblock %}
