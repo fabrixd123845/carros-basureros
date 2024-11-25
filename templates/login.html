@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Sistema de Monitoreo de Carros Basureros - Inicio de Sesión</title>
+</head>
+<body class="bg-primary">
+
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4">
+            <div class="row g-0 align-items-center">
+                <div class="col-md-4">
+                    <img src="{{ url_for('static', filename='images/camion.png') }}" alt="Carro Basurero" class="img-fluid rounded-start carro-img">
+                </div>
+                
+                <div class="col-md-1"></div> 
+    
+                <div class="col-md-7">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
+
+                        <form id="loginForm" action="{{ url_for('web_bp.auth_login') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Carnet de Identidad (Usuario)</label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Ingrese su número de carnet" required pattern="\d+" title="Solo se permiten números">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                            </div>
+                            <button type="submit" class="btn btn-custom w-100 bg-primary text-white">Ingresar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Obtenemos mensajes del backend pasados como variables
+        const message = "{{ message|safe }}";
+        const category = "{{ category|safe }}";
+    
+        // Si hay un mensaje, mostramos un pop-up
+        if (message) {
+            const alertType = category === 'success' ? 'success' : 'error'; // Determina el tipo de mensaje
+            const alertColor = alertType === 'success' ? '#28a745' : '#dc3545'; // Colores: verde para éxito, rojo para error
+    
+            // Crear y mostrar el pop-up
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.left = '50%';
+            popup.style.transform = 'translateX(-50%)';
+            popup.style.backgroundColor = alertColor;
+            popup.style.color = 'white';
+            popup.style.padding = '15px 20px';
+            popup.style.borderRadius = '5px';
+            popup.style.zIndex = 1000;
+            popup.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.1)';
+            popup.style.fontSize = '16px';
+            popup.style.fontWeight = 'bold';
+            popup.textContent = message;
+    
+            document.body.appendChild(popup);
+    
+            // Quitar el pop-up después de 3 segundos
+            setTimeout(() => {
+                popup.remove();
+            }, 3000);
+        }
+    </script>
+    
+</body>
+</html>

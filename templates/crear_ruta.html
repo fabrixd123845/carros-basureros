@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nueva Ruta{% endblock %}
+
+{% block header %}
+Crear Nueva Ruta
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-center mb-4">Dibujar Nueva Ruta</h2>
+
+    <!-- Formulario para guardar la ruta -->
+    <div class="mb-3">
+        <label for="nombreRuta" class="form-label">Nombre de la Ruta:</label>
+        <input type="text" class="form-control" id="nombreRuta" placeholder="Ingrese un nombre para la ruta">
+    </div>
+    <div id="map" style="height: 500px; margin-top: 20px;"></div>
+    <div class="text-end mt-3">
+        <button id="guardarRutaBtn" class="btn btn-success">Guardar Ruta</button>
+        <a href="{{ url_for('web_bp.rutas') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</div>
+
+<script>
+    // Inicializar el mapa centrado en Colcapirhua, Cochabamba, Bolivia
+    const map = L.map('map').setView([-17.383, -66.281], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+        edit: { featureGroup: drawnItems },
+        draw: {
+            polyline: true,
+            polygon: false,
+            rectangle: false,
+            circle: false,
+            marker: false
+        }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+        const layer = e.layer;
+        drawnItems.addLayer(layer);
+    });
+
+    // Guardar la ruta
+    document.getElementById('guardarRutaBtn').addEventListener('click', async () => {
+        const nombreRuta = document.getElementById('nombreRuta').value;
+        if (!nombreRuta) {
+            alert('Por favor, ingrese un nombre para la ruta.');
+            return;
+        }
+
+        const geojson = drawnItems.toGeoJSON();
+        if (!geojson.features.length) {
+            alert('Por favor, dibuje una ruta en el mapa.');
+            return;
+        }
+
+        const response = await fetch('/web/guardar_ruta', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nombre: nombreRuta, geojson: geojson })
+        });
+
+        if (response.ok) {
+            alert('Ruta guardada correctamente.');
+            window.location.href = "{{ url_for('web_bp.rutas') }}";
+        } else {
+            alert('Error al guardar la ruta.');
+        }
+    });
+</script>
+{% endblock %}
