@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Ver Ruta{% endblock %}
+
+{% block header %}
+Ver Ruta: {{ ruta_nombre }}
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-center mb-4">Ruta: {{ ruta_nombre }}</h2>
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+    <div class="text-end mt-3">
+        <a href="{{ url_for('web_bp.rutas') }}" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+
+<style>
+    .map-container {
+        height: 500px;
+        border: 2px solid #6458E2;
+        border-radius: 10px;
+        margin-top: 20px;
+        overflow: hidden;
+    }
+    #map {
+        height: 100%;
+        width: 100%;
+    }
+</style>
+
+<script>
+    // Inicializar el mapa
+    const map = L.map('map').setView([-17.38831, -66.23425], 14); // Coordenadas iniciales en Colcapirhua
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Cargar y mostrar la ruta desde el GeoJSON
+    const geojson = {{ geojson|tojson }};
+    const rutaLayer = L.geoJSON(geojson, {
+        style: {
+            color: '#ff5722',
+            weight: 4
+        }
+    }).addTo(map);
+
+    // Ajustar el mapa para que se centre automáticamente en la ruta
+    if (rutaLayer.getBounds) {
+        map.fitBounds(rutaLayer.getBounds());
+    } else {
+        console.warn('No se pudo ajustar el mapa a los límites de la ruta.');
+    }
+</script>
+{% endblock %}
