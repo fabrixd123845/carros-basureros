@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Nuevo Personal</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: #6458E2;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #4a3ebf;
+        }
+
+        .card-header {
+            background-color: #d9534f;
+            color: white;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #carro_asignado {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h3>Nuevo Personal</h3>
+            </div>
+            <div class="card-body">
+                <form id="nuevoPersonalForm">
+                    <div class="mb-3">
+                        <label for="nombre_completo" class="form-label">Nombre Completo:</label>
+                        <input type="text" class="form-control" id="nombre_completo" name="nombre_completo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="carnet" class="form-label">Carnet:</label>
+                        <input type="number" class="form-control" id="carnet" name="carnet" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edad" class="form-label">Edad:</label>
+                        <input type="number" class="form-control" id="edad" name="edad" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="telefono" class="form-label">Teléfono:</label>
+                        <input type="number" class="form-control" id="telefono" name="telefono" required>
+                    </div>
+                                       
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo:</label>
+                        <select class="form-select" id="tipo" name="tipo" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="conductor">Conductor</option>
+                            <option value="operario">Operario</option>
+                            {% if user_role == "superadmin" %}
+                                <option value="admin">Administrador</option>
+                                <option value="superadmin">Superadministrador</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="carro_asignado">
+                        <label for="carro" class="form-label">Carro Asignado:</label>
+                        <select class="form-select" id="carro" name="carro">
+                            {% for carro in carros_disponibles %}
+                            <option value="{{ carro._id }}">{{ carro.codigo_interno }} - {{ carro.placa }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="passwordField">
+                        <label for="password" class="form-label">Contraseña:</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary w-50">Registrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Mostrar/ocultar campos según el tipo seleccionado
+        const tipoSelect = document.getElementById('tipo');
+        const passwordField = document.getElementById('passwordField');
+        const carroField = document.getElementById('carro_asignado');
+
+        tipoSelect.addEventListener('change', (event) => {
+            const selectedValue = event.target.value;
+
+            // Mostrar/ocultar el campo del carro asignado
+            carroField.style.display = selectedValue === "conductor" ? "block" : "none";
+
+            // Mostrar/ocultar el campo de contraseña
+            passwordField.style.display = selectedValue === "operario" ? "none" : "block";
+        });
+
+        // Manejar el envío del formulario
+        document.getElementById('nuevoPersonalForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Crear el objeto de datos a enviar
+            const data = {
+                carnet_identidad: document.getElementById('carnet').value,
+                nombre_completo: document.getElementById('nombre_completo').value,
+                edad: document.getElementById('edad').value,
+                telefono: document.getElementById('telefono').value,
+                cargo: document.getElementById('tipo').value,
+                carro_asignado: document.getElementById('tipo').value === 'conductor' ? document.getElementById('carro').value : null
+            };
+
+            // Solo añadir contraseña si no es "operario"
+            if (document.getElementById('tipo').value !== "operario") {
+                data.password = document.getElementById('password').value;
+            }
+
+            try {
+                const response = await fetch('/web/crear_personal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Personal registrado correctamente.');
+                    window.opener.location.reload();  // Recargar la ventana principal
+                    window.close();  // Cerrar la ventana actual
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.message || 'Error al registrar el personal.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error en el servidor.');
+            }
+        });
+    </script>
+</body>
+</html>

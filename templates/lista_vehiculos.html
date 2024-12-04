@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Vehículos{% endblock %}
+
+{% block header %}
+Lista de Vehículos
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Botón "Nuevo Vehículo" -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button class="btn btn-success" onclick="abrirNuevoVehiculo()">Nuevo Vehículo</button>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar por código interno o placa...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Vehículos -->
+    <div class="card">
+        <div class="card-header">
+            <strong>Lista de Vehículos</strong>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered text-center m-0" id="vehiculosTable">
+                <thead>
+                    <tr>
+                        <th style="background-color: #28a745; color: white;">Cod_interno</th>
+                        <th style="background-color: #28b2ed; color: white;">Tipo de Vehículo</th>
+                        <th style="background-color: #17a2b8; color: white;">Marca</th>
+                        <th style="background-color: #ffc107; color: white;">Placa</th>
+                        <th style="background-color: #6f42c1; color: white;">Estado</th>
+                        <th style="background-color: #007bff; color: white;">Conductor</th>
+                        <th style="background-color: #17a2b8; color: white;">Editar</th>
+                        <th style="background-color: #dc3545; color: white;">Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehiculo in lista_vehiculos %}
+                    <tr>
+                        <td>{{ vehiculo.codigo_interno }}</td>
+                        <td>{{ vehiculo.tipo_vehiculo or "Desconocido" }}</td>
+                        <td>{{ vehiculo.marca or "Desconocida" }}</td>
+                        <td>{{ vehiculo.placa }}</td>
+                        <td>{{ vehiculo.estado or "Desconocido" }}</td>
+                        <td>
+                            {% if vehiculo.conductor_id %}
+                            <button class="btn btn-primary btn-sm" onclick="verConductor('{{ vehiculo.conductor_id }}')">Ver Conductor</button>
+                            {% else %}
+                            <span>Sin conductor asignado</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="editarVehiculo('{{ vehiculo.id }}')">Editar</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarVehiculo('{{ vehiculo.id }}')">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function verConductor(conductorId) {
+        const popup = window.open(`/web/ver_conductor/${conductorId}`, 'Ver Conductor', 'width=600,height=700,resizable=no,scrollbars=no');
+        popup.focus();
+    }
+
+    function abrirNuevoVehiculo() {
+        window.open('/web/nuevo_vehiculo', 'Nuevo Vehículo', 'width=600,height=700,resizable=no,scrollbars=no');
+    }
+
+    // Filtrar por búsqueda
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#vehiculosTable tbody tr');
+        rows.forEach(row => {
+            const codigo = row.cells[0].textContent.toLowerCase();
+            const placa = row.cells[3].textContent.toLowerCase();
+            row.style.display = codigo.includes(searchText) || placa.includes(searchText) ? '' : 'none';
+        });
+    });
+
+    function editarVehiculo(vehiculoId) {
+        const popup = window.open(`/web/editar_vehiculo/${vehiculoId}`, 'Editar Vehículo', 'width=600,height=400,resizable=no,scrollbars=no');
+        popup.focus();
+    }
+
+
+    function eliminarVehiculo(vehiculoId) {
+        if (confirm('¿Estás seguro de que deseas eliminar este vehículo? Esto eliminará cualquier vínculo asociado.')) {
+            fetch(`/web/eliminar_vehiculo/${vehiculoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === "Vehículo eliminado correctamente") {
+                    alert(data.message);
+                    location.reload(); // Recargar la página para actualizar la lista
+                } else {
+                    alert(data.message || 'Error al eliminar el vehículo');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión al eliminar el vehículo');
+            });
+        }
+    }
+</script>
+
+{% endblock %}
